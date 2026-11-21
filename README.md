@@ -2,8 +2,7 @@
 
 A web-based student management dashboard where students track courses, assignments, submissions and academic progress, and faculty/admins manage courses, assignments and review submissions.
 
-- **Live demo:** `<your-render-url>`
-- **Repository:** `<your-github-url>`
+- **Live demo:** https://student-dashboard-nexorithm.onrender.com
 
 ---
 
