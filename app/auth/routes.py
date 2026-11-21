@@ -39,10 +39,13 @@ def register():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        if current_user.role == 'admin':
-            return redirect(url_for('admin.admin_home'))
-        return redirect(url_for('student.dashboard'))
+    try:
+        if current_user.is_authenticated:
+            if current_user.role == 'admin':
+                return redirect(url_for('admin.admin_home'))
+            return redirect(url_for('student.dashboard'))
+    except Exception:
+        pass
 
     form = LoginForm()
     if form.validate_on_submit():

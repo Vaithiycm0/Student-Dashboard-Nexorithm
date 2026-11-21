@@ -10,9 +10,16 @@ from app import create_app, db
 from app.models import User, Course, Enrollment, Assignment, Submission, get_utc_now
 
 
-def seed_database():
-    app = create_app()
-    with app.app_context():
+def seed_database(target_app=None):
+    if target_app is None:
+        target_app = create_app()
+        ctx = target_app.app_context()
+        ctx.push()
+        should_pop = True
+    else:
+        should_pop = False
+
+    try:
         print("Creating all database tables...")
         db.create_all()
 
@@ -167,6 +174,9 @@ def seed_database():
         print("  Admin:   admin@demo.com   / Admin@123")
         print("  Student: student@demo.com / Student@123")
         print("========================\n")
+    finally:
+        if should_pop:
+            ctx.pop()
 
 
 if __name__ == '__main__':

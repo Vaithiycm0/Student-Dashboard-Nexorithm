@@ -34,10 +34,13 @@ def create_app(config_class=Config):
 
     @app.route('/')
     def index():
-        if current_user.is_authenticated:
-            if current_user.role == 'admin':
-                return redirect(url_for('admin.admin_home'))
-            return redirect(url_for('student.dashboard'))
+        try:
+            if current_user.is_authenticated:
+                if current_user.role == 'admin':
+                    return redirect(url_for('admin.admin_home'))
+                return redirect(url_for('student.dashboard'))
+        except Exception:
+            pass
         return redirect(url_for('auth.login'))
 
     @app.route('/init-db')
@@ -46,7 +49,7 @@ def create_app(config_class=Config):
         db.create_all()
         from seed import seed_database
         try:
-            seed_database()
+            seed_database(app)
             return "Database initialized and seeded successfully! <a href='/login'>Go to Login</a>"
         except Exception as e:
             return f"Database already initialized or error: {e}. <a href='/login'>Go to Login</a>"
@@ -67,5 +70,17 @@ def create_app(config_class=Config):
     @app.context_processor
     def inject_now():
         return {'now': datetime.now(timezone.utc)}
+
+    # Auto-initialize database tables and seed data if brand new
+    if not app.config.get('TESTING'):
+        with app.app_context():
+            try:
+                db.create_all()
+                from app.models import User
+                if not User.query.first():
+                    from seed import seed_database
+                    seed_database(app)
+            except Exception as e:
+                app.logger.warning(f"Auto-init database notice: {e}")
 
     return app
