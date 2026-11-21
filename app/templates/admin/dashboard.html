@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Portal - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <span class="badge bg-danger">ADMINISTRATOR</span>
+      <h3 class="fw-bold mb-0">Management Portal</h3>
+    </div>
+    <p class="text-muted mb-0">Manage courses, assignments, and review student work.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.new_course') }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-plus-circle me-1"></i> Add Course
+    </a>
+    <a href="{{ url_for('admin.new_assignment') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-file-earmark-plus me-1"></i> Create Assignment
+    </a>
+  </div>
+</div>
+
+<!-- Admin Stats -->
+<div class="row g-4 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-stats dashboard-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase">Total Students</span>
+          <h3 class="fw-bold mt-1 mb-0 text-primary">{{ total_students }}</h3>
+        </div>
+        <div class="stat-icon bg-primary-subtle text-primary">
+          <i class="bi bi-people-fill"></i>
+        </div>
+      </div>
+      <div class="mt-3 small text-muted">Registered student accounts</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-stats dashboard-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase">Total Courses</span>
+          <h3 class="fw-bold mt-1 mb-0 text-info">{{ courses|length }}</h3>
+        </div>
+        <div class="stat-icon bg-info-subtle text-info">
+          <i class="bi bi-journal-bookmark-fill"></i>
+        </div>
+      </div>
+      <div class="mt-3 small">
+        <a href="{{ url_for('admin.new_course') }}" class="text-decoration-none text-info fw-semibold">
+          Create new course <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-stats dashboard-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase">Assignments</span>
+          <h3 class="fw-bold mt-1 mb-0 text-dark">{{ assignment_stats|length }}</h3>
+        </div>
+        <div class="stat-icon bg-secondary-subtle text-secondary">
+          <i class="bi bi-clipboard2-check-fill"></i>
+        </div>
+      </div>
+      <div class="mt-3 small">
+        <a href="{{ url_for('admin.new_assignment') }}" class="text-decoration-none text-secondary fw-semibold">
+          New assignment <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-stats dashboard-card p-3 h-100">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <span class="text-muted small fw-semibold text-uppercase">Pending Reviews</span>
+          <h3 class="fw-bold mt-1 mb-0 text-warning">{{ pending_reviews_count }}</h3>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-hourglass-bottom"></i>
+        </div>
+      </div>
+      <div class="mt-3 small text-muted">Awaiting faculty evaluation</div>
+    </div>
+  </div>
+</div>
+
+<!-- Assignments Table -->
+<div class="card dashboard-card mb-4">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="h6 fw-bold mb-0"><i class="bi bi-clipboard2-check me-2 text-primary"></i>Course Assignments & Submissions</h5>
+    <a href="{{ url_for('admin.new_assignment') }}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-lg me-1"></i> New Assignment
+    </a>
+  </div>
+  <div class="card-body p-0">
+    {% if assignment_stats %}
+      <div class="table-responsive">
+        <table class="table table-hover table-custom mb-0">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Assignment Title</th>
+              <th>Deadline</th>
+              <th>Enrolled</th>
+              <th>Submitted</th>
+              <th>Reviewed</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in assignment_stats %}
+              <tr>
+                <td>
+                  <span class="badge bg-secondary-subtle text-secondary border fw-bold">{{ item.assignment.course.code }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold text-dark">{{ item.assignment.title }}</div>
+                  <small class="text-muted">{{ item.assignment.description|truncate(50) if item.assignment.description else 'No description' }}</small>
+                </td>
+                <td class="small">{{ item.assignment.deadline.strftime('%b %d, %Y %H:%M') }}</td>
+                <td><span class="badge bg-light text-dark border">{{ item.total_enrolled }}</span></td>
+                <td><span class="badge bg-primary-subtle text-primary">{{ item.submitted_count }}</span></td>
+                <td><span class="badge bg-success-subtle text-success">{{ item.reviewed_count }}</span></td>
+                <td class="text-end">
+                  <a href="{{ url_for('admin.view_submissions', id=item.assignment.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye me-1"></i> View Submissions ({{ item.total_subs }})
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-muted">
+        No assignments created yet.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Courses Table -->
+<div class="card dashboard-card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="h6 fw-bold mb-0"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Active Courses</h5>
+    <a href="{{ url_for('admin.new_course') }}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-plus-lg me-1"></i> Add Course
+    </a>
+  </div>
+  <div class="card-body p-0">
+    {% if courses %}
+      <div class="table-responsive">
+        <table class="table table-hover table-custom mb-0">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Title</th>
+              <th>Instructor</th>
+              <th>Enrolled Students</th>
+              <th>Assignments</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in courses %}
+              <tr>
+                <td><span class="badge bg-primary px-2 py-1">{{ c.code }}</span></td>
+                <td class="fw-semibold text-dark">{{ c.title }}</td>
+                <td class="small text-muted">{{ c.faculty.name if c.faculty else 'Admin' }}</td>
+                <td><span class="badge bg-light text-dark border">{{ c.student_count }} students</span></td>
+                <td><span class="badge bg-light text-dark border">{{ c.assignment_count }} assignments</span></td>
+                <td class="text-end">
+                  <a href="{{ url_for('admin.edit_course', id=c.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-muted">
+        No courses available.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

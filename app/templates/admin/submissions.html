@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions - {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <a href="{{ url_for('admin.admin_home') }}" class="text-decoration-none small text-muted">
+      <i class="bi bi-arrow-left me-1"></i> Back to Admin Portal
+    </a>
+  </div>
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+      <span class="badge bg-secondary-subtle text-secondary border fw-bold mb-1">{{ course.code }} - {{ course.title }}</span>
+      <h3 class="fw-bold mb-1">{{ assignment.title }}</h3>
+      <p class="text-muted mb-0 small">
+        <i class="bi bi-calendar-event me-1"></i> Deadline: <strong>{{ assignment.deadline.strftime('%b %d, %Y %H:%M UTC') }}</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Submissions Table -->
+<div class="card dashboard-card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="h6 fw-bold mb-0"><i class="bi bi-people me-2 text-primary"></i>Enrolled Students & Submissions</h5>
+    <span class="badge bg-light text-dark border">{{ student_submission_rows|length }} Students Enrolled</span>
+  </div>
+  <div class="card-body p-0">
+    {% if student_submission_rows %}
+      <div class="table-responsive">
+        <table class="table table-hover table-custom mb-0">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Submitted Work</th>
+              <th>Submitted At</th>
+              <th>Feedback / Remarks</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in student_submission_rows %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-dark">{{ row.student.name }}</div>
+                  {% if row.student.department %}
+                    <small class="text-muted">{{ row.student.department }}{% if row.student.year %}, Year {{ row.student.year }}{% endif %}</small>
+                  {% endif %}
+                </td>
+                <td class="small">{{ row.student.email }}</td>
+                <td>
+                  {% if row.status == 'reviewed' %}
+                    <span class="badge badge-status badge-reviewed"><i class="bi bi-check-all me-1"></i> Reviewed</span>
+                  {% elif row.status == 'submitted' %}
+                    <span class="badge badge-status badge-submitted"><i class="bi bi-check me-1"></i> Submitted</span>
+                  {% else %}
+                    <span class="badge badge-status badge-pending"><i class="bi bi-hourglass me-1"></i> Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.submission %}
+                    <div class="small">
+                      {% if row.link %}
+                        <div>
+                          <a href="{{ row.link }}" target="_blank" class="text-primary text-truncate d-inline-block" style="max-width: 180px;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View Link
+                          </a>
+                        </div>
+                      {% endif %}
+                      {% if row.notes %}
+                        <div class="text-muted text-truncate" style="max-width: 200px;" title="{{ row.notes }}">
+                          <i class="bi bi-card-text me-1"></i> {{ row.notes }}
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <span class="text-muted small">No submission</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">
+                  {{ row.submitted_at.strftime('%b %d, %H:%M') if row.submitted_at else '-' }}
+                </td>
+                <td>
+                  {% if row.remarks %}
+                    <span class="small text-success"><i class="bi bi-chat-left-text me-1"></i> {{ row.remarks }}</span>
+                  {% else %}
+                    <span class="small text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if row.submission %}
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal{{ row.submission_id }}">
+                      <i class="bi bi-pencil-square me-1"></i> Review
+                    </button>
+
+                    <!-- Review Modal -->
+                    <div class="modal fade text-start" id="reviewModal{{ row.submission_id }}" tabindex="-1" aria-labelledby="reviewModalLabel{{ row.submission_id }}" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <form action="{{ url_for('admin.review_submission', id=row.submission_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="modal-header">
+                              <h5 class="modal-title fw-bold" id="reviewModalLabel{{ row.submission_id }}">Review: {{ row.student.name }}</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              {% if row.link %}
+                                <div class="mb-3">
+                                  <label class="form-label small fw-semibold text-muted">Submitted Link:</label>
+                                  <div><a href="{{ row.link }}" target="_blank">{{ row.link }}</a></div>
+                                </div>
+                              {% endif %}
+                              {% if row.notes %}
+                                <div class="mb-3">
+                                  <label class="form-label small fw-semibold text-muted">Student Notes:</label>
+                                  <div class="p-2 bg-light rounded small">{{ row.notes }}</div>
+                                </div>
+                              {% endif %}
+
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Status</label>
+                                <select name="status" class="form-select">
+                                  <option value="reviewed" {% if row.status == 'reviewed' %}selected{% endif %}>Mark as Reviewed</option>
+                                  <option value="submitted" {% if row.status == 'submitted' %}selected{% endif %}>Needs Re-submission / Keep Submitted</option>
+                                </select>
+                              </div>
+
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold">Faculty Feedback / Remarks</label>
+                                <textarea name="remarks" class="form-control" rows="3" placeholder="Enter comments, constructive feedback, or grade remarks...">{{ row.remarks or '' }}</textarea>
+                              </div>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                              <button type="submit" class="btn btn-success btn-sm">Save Review</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <span class="badge bg-light text-muted border">Awaiting Student</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-people fs-1 mb-2 d-block"></i>
+        <p>No students have enrolled in this course yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

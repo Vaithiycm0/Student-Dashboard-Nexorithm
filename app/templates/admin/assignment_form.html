@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4">
+  <div class="col-lg-6">
+    <div class="card dashboard-card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h4 class="h5 fw-bold mb-0"><i class="bi bi-file-earmark-plus me-2 text-primary"></i>{{ title }}</h4>
+        <small class="text-muted">Create a new assignment for enrolled students with a clear deadline</small>
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.course_id.label(class="form-label fw-semibold small") }}
+            {{ form.course_id(class="form-select" + (" is-invalid" if form.course_id.errors else "")) }}
+            {% for error in form.course_id.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.title.label(class="form-label fw-semibold small") }}
+            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Lab 1: Python Basics") }}
+            {% for error in form.title.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ form.deadline.label(class="form-label fw-semibold small") }}
+            {{ form.deadline(class="form-control" + (" is-invalid" if form.deadline.errors else "")) }}
+            <small class="text-muted">Specify the submission cutoff date and time.</small>
+            {% for error in form.deadline.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-4">
+            {{ form.description.label(class="form-label fw-semibold small") }}
+            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Provide prompt instructions, links to problem sets, or submission expectations...") }}
+            {% for error in form.description.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('admin.admin_home') }}" class="btn btn-outline-secondary">Cancel</a>
+            {{ form.submit(class="btn btn-primary px-4") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
