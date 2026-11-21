@@ -40,6 +40,17 @@ def create_app(config_class=Config):
             return redirect(url_for('student.dashboard'))
         return redirect(url_for('auth.login'))
 
+    @app.route('/init-db')
+    def init_db():
+        """Helper route to initialize tables and seed demo data on Render if needed"""
+        db.create_all()
+        from seed import seed_database
+        try:
+            seed_database()
+            return "Database initialized and seeded successfully! <a href='/login'>Go to Login</a>"
+        except Exception as e:
+            return f"Database already initialized or error: {e}. <a href='/login'>Go to Login</a>"
+
     @app.errorhandler(403)
     def forbidden_error(error):
         return render_template('errors/403.html'), 403
